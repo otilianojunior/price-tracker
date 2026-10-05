@@ -1,0 +1,28 @@
+
+# Banco de dados
+postgres_data/
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Credenciais / sessões
+credentials/
+cookies/
+sessions/
+data/
+*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
