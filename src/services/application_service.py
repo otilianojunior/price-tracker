@@ -8,6 +8,7 @@ from src.database.database import SessionLocal
 from src.database.models import (
     Categoria,
     Produto,
+    Promocao,
     RotacaoColeta,
 )
 from src.notifications.service import NotificationService
