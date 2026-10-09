@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from src.auth.mercado_livre_browser import MercadoLivreBrowser
 from src.auth.exceptions import (
     MercadoLivreLoginRequiredError,
@@ -17,6 +19,7 @@ from src.services.execution_service import ExecutionService
 from src.services.mercado_livre_affiliate import MercadoLivreAffiliateClient
 from src.services.mercado_livre_service import MercadoLivreService
 from src.services.publication_service import PublicationService
+from src.services.retention_service import RetentionService
 
 
 class ApplicationService:
@@ -24,6 +27,8 @@ class ApplicationService:
 
     def __init__(self):
         self.execution = ExecutionService()
+        self.retention = RetentionService()
+        self.retention_last_run_date = None
 
         affiliate_client = MercadoLivreAffiliateClient()
 
@@ -315,7 +320,36 @@ class ApplicationService:
     ):
         """Executa as etapas internas da aplicação."""
 
-        print("Verificando sessão do Mercado Livre...")
+        print()
+        hoje = datetime.now().date()
+
+        retencao = {
+            "registros_antigos": 0,
+            "registros_removidos": 0,
+        }
+
+        if self.retention_last_run_date != hoje:
+            print()
+            print("Verificando retenção do histórico de preços...")
+
+            try:
+                retencao = self.retention.cleanup_old_prices(
+                    retention_days=7,
+                    dry_run=True,
+                )
+                self.retention_last_run_date = hoje
+
+            except Exception as erro:
+                print(f"ERRO na simulação de retenção: {erro}")
+                print(
+                    "Continuando a rodada sem executar "
+                    "a retenção."
+                )
+        else:
+            print(
+                "Retenção já verificada hoje; "
+                "pulando esta etapa."
+            )
 
         sessao = MercadoLivreBrowser().check_session()
 
@@ -572,5 +606,11 @@ class ApplicationService:
             ),
             "publicacoes_preparadas": len(
                 publicacoes_preparadas
+            ),
+            "precos_antigos_encontrados": (
+                retencao["registros_antigos"]
+            ),
+            "precos_removidos": (
+                retencao["registros_removidos"]
             ),
         }
